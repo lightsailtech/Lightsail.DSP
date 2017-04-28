@@ -1,0 +1,21 @@
+﻿(C) Copyright Michael Godfrey 2017
+
+Lightsail.DSP is released as free software under the terms of the GNU General 
+Public License ver. 3
+
+For more info see:
+https://www.gnu.org/licenses/gpl-3.0.en.html
+
+
+Additionally,
+1.) the file /Lomont/LomontFFT.cs is distributed with the notice:
+
+
+// Code to implement decently performing FFT for complex and real valued                                         
+// signals. See www.lomont.org for a derivation of the relevant algorithms                                       
+// from first principles. Copyright Chris Lomont 2010-2012.                                                      
+// This code and any ports are free for all to use for any reason as long                                        
+// as this header is left in place.                                                                              
+// Version 1.1, Sept 2011
+
+2.) Any advertising material that 
