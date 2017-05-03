@@ -8,12 +8,19 @@ namespace Lightsail.DSP
 {
     public interface ILightsailFFT
     {
-        void        FFT(double[]  data, bool forward = true);
-        void    FFTReal(double[]  data, bool forward = true);
-        void   FFTTable(double[]  data, bool forward = true);
-        void      FFT2D(double[,] data, bool forward = true);
-        void  FFTReal2D(double[,] data, bool forward = true);
-        void FFTTable2D(double[,] data, bool forward = true);
+        void FFT(        Complex[] data, bool forward = true);
+        void FFTReal(    Complex[] data, bool forward = true);
+        void FFTTable(   Complex[] data, bool forward = true);
+        void FFT2D(     Complex[,] data, bool forward = true);
+        void FFT2DReal( Complex[,] data, bool forward = true);
+        void FFT2DTable(Complex[,] data, bool forward = true);
+
+        void FFT(       double[]  datRl, double[]  datIm, bool forward = true);
+        void FFTReal(   double[]  datRl, double[]  datIm, bool forward = true);
+        void FFTTable(  double[]  datRl, double[]  datIm, bool forward = true);
+        void FFT2D(     double[,] datRl, double[,] datIm, bool forward = true);
+        void FFT2DReal( double[,] datRl, double[,] datIm, bool forward = true);
+        void FFT2DTable(double[,] datRl, double[,] datIm, bool forward = true);
 
         /// <summary>                                                                                            
         ///     Common (A,B) values are: 
@@ -48,21 +55,23 @@ namespace Lightsail.DSP
             fft = new Lomont.LomontFFT();
         } // end constructor
 
+
         public void FFT(double[] data, bool forward)
         {
-
-        }
-
-
-        public void IFFT()
-        {
-
+            fft.FFT(data, forward);
         } // end FFT
 
-        /**
-         * 
-         */
-        public void FFT2(Complex[,] c, int dir)
+        public void FFTReal(double[] data, bool forward)
+        {
+            fft.RealFFT(data, forward);
+        } // end FFTReal
+
+        public void FFTTable(double[] data, bool forward)
+        {
+            fft.TableFFT(data, forward);
+        } // end FFTTable
+
+        public void FFT2(Complex[,] c, bool forward)
         {
 
             int idx, jdx;
@@ -98,7 +107,7 @@ namespace Lightsail.DSP
                     im_x[idx] = c[idx,jdx].ImPart;
                 }
 
-                FFT(dir, m, rl_x, im_x);
+                fft.FFT(FFTUtil.RlImToLomont(rl_x, im_x), forward: forward);
 
                 for (idx = 0; idx < nx; idx++)
                 {
@@ -117,7 +126,7 @@ namespace Lightsail.DSP
                     im_y[jdx] = c[idx,jdx].ImPart;
                 }
 
-                FFT(dir, m, rl_y, im_y);
+                //FFT(dir, m, rl_y, im_y);
 
                 for (jdx = 0; jdx < ny; jdx++)
                 {
@@ -135,6 +144,65 @@ namespace Lightsail.DSP
 
         } // end FFT2
 
+        public void FFT(Complex[] data, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFTReal(Complex[] data, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFTTable(Complex[] data, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT2D(Complex[,] data, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT2DReal(Complex[,] data, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT2DTable(Complex[,] data, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT(double[] datRl, double[] datIm, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFTReal(double[] datRl, double[] datIm, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFTTable(double[] datRl, double[] datIm, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT2D(double[,] datRl, double[,] datIm, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT2DReal(double[,] datRl, double[,] datIm, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FFT2DTable(double[,] datRl, double[,] datIm, bool forward = true)
+        {
+            throw new NotImplementedException();
+        }
     } // end class FFT
 }
 
