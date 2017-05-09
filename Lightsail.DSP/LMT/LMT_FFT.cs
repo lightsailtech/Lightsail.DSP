@@ -50,18 +50,13 @@ namespace Lomont
                 double wr = 1, wi = 0;
                 var wpr = Math.Cos(theta);
                 var wpi = Math.Sin(theta);
-//Console.WriteLine("    FFT: while (n > mmax) ... (" + n + " > " + mmax + ") ... theta = " + sign / mmax + " pi");
                 for (var m = 0; m < istep; m += 2)
                 {
-//Console.WriteLine("   FFT: for (var m = 0; m < istep; m += 2) ... (var "+m+ " = 0; " + m + " < " + istep + "; " + m + " += 2)");
                     for (var k = m; k < 2 * n; k += 2 * istep)
                     {
-//Console.WriteLine("   FFT: for (var k = m; k < 2 * n; k += 2 * istep) ... (var "+k+ " = "+m+ "; "+k+ " < 2 * "+n+ "; "+k+ " += 2 * "+istep+")");
                         var j = k + istep;
                         var tempr = wr * data[j] - wi * data[j + 1];
                         var tempi = wi * data[j] + wr * data[j + 1];
-Console.WriteLine("    FFT: data[" + j + "] : " + data[j] + " data[j + 1] : " + data[j + 1]);
-//Console.WriteLine("    FFT: tempr : " + tempr + "    tempi : " + tempi);
                         data[j] = data[k] - tempr;
                         data[j + 1] = data[k + 1] - tempi;
                         data[k] = data[k] + tempr;
@@ -80,7 +75,9 @@ Console.WriteLine("    FFT: data[" + j + "] : " + data[j] + " data[j + 1] : " + 
 
         public void NrmlFFT(double[] RlDat, double[] ImDat, bool forward)
         {
+            // n is the number of samples                                                             
             var n = RlDat.Length;
+
             // checks n is a power of 2 in 2's complement format                                                 
             if ((n & (n - 1)) != 0)
                 throw new ArgumentException(
@@ -89,10 +86,7 @@ Console.WriteLine("    FFT: data[" + j + "] : " + data[j] + " data[j + 1] : " + 
                 throw new ArgumentException(
                     "Real data length must match imaginary");
 
-            // n /= 2;    // n is the number of samples                                                             
-
-            //Reverse(dat, n); // bit index data reversal                                                         
-            Reverse(RlDat,ImDat,n);
+            Reverse(RlDat,ImDat,n); // bit index data reversal                                                         
 
             // do transform: so single point transforms, then doubles, etc.                                      
             double sign = forward ? B : -B;
@@ -104,31 +98,18 @@ Console.WriteLine("    FFT: data[" + j + "] : " + data[j] + " data[j + 1] : " + 
                 double wr = 1, wi = 0;
                 var wpr = Math.Cos(theta);
                 var wpi = Math.Sin(theta);
-//Console.WriteLine("NrmlFFT: while (n > mmax) ... (" + n + " > " + mmax + ") ... theta = " + sign / mmax + " pi");
                 for (var m = 0; m < istep; m += 2)
                 {
-//Console.WriteLine("NrmlFFT: for (var m = 0; m < istep; m += 2) ... (var "+m+ " = 0; " + m + " < " + istep + "; " + m + " += 2)");
                     for (var k = m; k < 2 * n; k += 2 * istep)
                     {
-//Console.WriteLine("NrmlFFT: for (var k = m; k < 2 * n; k += 2 * istep) ... (var " + k + " = " + m + "; " + k + " < 2 * " + n + "; " + k + " += 2 * " + istep + ")");
                         var j = k + istep;
-                        //var tempr = wr * data[j] - wi * data[j + 1];
-                        var tempr = wr * RlDat[LmtToNrmlIdx(j)] - wi * ImDat[LmtToNrmlIdx(j)];
-                        //var tempi = wi * data[j] + wr * data[j + 1];
-                        var tempi = wi * RlDat[LmtToNrmlIdx(j)] + wr * ImDat[LmtToNrmlIdx(j)];
-Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrmlIdx(j)]  + " ImDat[" + LmtToNrmlIdx(j) + "] : " + ImDat[LmtToNrmlIdx(j)]);
-//Console.WriteLine("NrmlFFT: tempr : " + tempr + "    tempi : " + tempi);
-                        //data[j] = data[k] - tempr;
-                        RlDat[LmtToNrmlIdx(j)] = RlDat[LmtToNrmlIdx(k)] - tempr;
-
-                        //data[j + 1] = data[k + 1] - tempi;
-                        ImDat[LmtToNrmlIdx(j)] = ImDat[LmtToNrmlIdx(k)] - tempi;
-
-                        //data[k] = data[k] + tempr;
-                        RlDat[LmtToNrmlIdx(k)] = RlDat[LmtToNrmlIdx(k)] + tempr;
-
-                        //data[k + 1] = data[k + 1] + tempi;
-                        ImDat[LmtToNrmlIdx(k)] = ImDat[LmtToNrmlIdx(k)] + tempi;
+                        int j_l = j / 2, k_l = k / 2;
+                        var tempr = wr * RlDat[j_l] - wi * ImDat[j_l];
+                        var tempi = wi * RlDat[j_l] + wr * ImDat[j_l];
+                        RlDat[j_l] = RlDat[k_l] - tempr;
+                        ImDat[j_l] = ImDat[k_l] - tempi;
+                        RlDat[k_l] = RlDat[k_l] + tempr;
+                        ImDat[k_l] = ImDat[k_l] + tempi;
                     }
                     var t = wr; // trig recurrence                                                               
                     wr = wr * wpr - wi * wpi;
@@ -139,16 +120,6 @@ Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrml
             // perform data scaling as needed                                                                    
             Scale(RlDat, n, forward);
             Scale(ImDat, n, forward);
-        }
-
-        static int LmtToNrmlIdx(int idx)
-        {
-            return idx / 2;
-        }
-
-        static int NrmlToLmtIdx(int idx)
-        {
-            return idx * 2;
         }
 
         /// <summary>                                                                                            
@@ -242,12 +213,13 @@ Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrml
                     for (var k = m; k < 2 * n; k += 2 * istep)
                     {
                         var j = k + istep;
-                        var tempr = wr * RlDat[LmtToNrmlIdx(j)] - wi * ImDat[LmtToNrmlIdx(j)];
-                        var tempi = wi * RlDat[LmtToNrmlIdx(j)] + wr * ImDat[LmtToNrmlIdx(j)];
-                        RlDat[LmtToNrmlIdx(j)] = RlDat[LmtToNrmlIdx(k)] - tempr;
-                        ImDat[LmtToNrmlIdx(j)] = ImDat[LmtToNrmlIdx(k)] - tempi;
-                        RlDat[LmtToNrmlIdx(k)] = RlDat[LmtToNrmlIdx(k)] + tempr;
-                        ImDat[LmtToNrmlIdx(k)] = ImDat[LmtToNrmlIdx(k)] + tempi;
+                        int j_l = j / 2, k_l = k / 2;
+                        var tempr = wr * RlDat[j_l] - wi * ImDat[j_l];
+                        var tempi = wi * RlDat[j_l] + wr * ImDat[j_l];
+                        RlDat[j_l] = RlDat[k_l] - tempr;
+                        ImDat[j_l] = ImDat[k_l] - tempi;
+                        RlDat[k_l] = RlDat[k_l] + tempr;
+                        ImDat[k_l] = ImDat[k_l] + tempi;
                     }
                 }
                 mmax = istep;
@@ -512,9 +484,6 @@ Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrml
             } // bit reverse loop                                                                                
         }
 
-
-
-
         static void Reverse(double[] RlDat, double[] ImDat, int n)
         {
             // bit reverse the indices. This is exercise 5 in section                                            
@@ -524,37 +493,39 @@ Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrml
             var top = n / 2;  // this is Knuth's 2^(n-1)                                                         
             while (true)
             {
+                int j_l = j / 2, k_l = k / 2;
+
                 // Knuth R2: swap - swap j+1 and k+2^(n-1), 2 entries each                                       
                 //var t = data[j + 2];
-                var t = RlDat[LmtToNrmlIdx(j + 2)];
-                RlDat[LmtToNrmlIdx(j + 2)] = RlDat[LmtToNrmlIdx(k + n)];
-                RlDat[LmtToNrmlIdx(k + n)] = t;
+                var t = RlDat[j_l + 1];
+                RlDat[j_l + 1] = RlDat[k_l + top];
+                RlDat[k_l + top] = t;
 
 
-                t = ImDat[LmtToNrmlIdx(j + 3)];
-                ImDat[LmtToNrmlIdx(j + 3)] = ImDat[LmtToNrmlIdx(k + n + 1)];
-                ImDat[LmtToNrmlIdx(k + n + 1)] = t;
+                t = ImDat[j_l + 1];
+                ImDat[j_l + 1] = ImDat[k_l + top];
+                ImDat[k_l + top] = t;
 
                 if (j > k)
                 { // swap two more                                     
 
                     // j and k                                                                                   
-                    t = RlDat[LmtToNrmlIdx(j)];
-                    RlDat[LmtToNrmlIdx(j)] = RlDat[LmtToNrmlIdx(k)];
-                    RlDat[LmtToNrmlIdx(k)] = t;
+                    t = RlDat[j_l];
+                    RlDat[j_l] = RlDat[k_l];
+                    RlDat[k_l] = t;
 
-                    t = ImDat[LmtToNrmlIdx(j + 1)];
-                    ImDat[LmtToNrmlIdx(j + 1)] = ImDat[LmtToNrmlIdx(k + 1)];
-                    ImDat[LmtToNrmlIdx(k + 1)] = t;
+                    t = ImDat[j_l];
+                    ImDat[j_l] = ImDat[k_l];
+                    ImDat[k_l] = t;
 
                     // j + top + 1 and k+top + 1                                                                 
-                    t = RlDat[LmtToNrmlIdx(j + n + 2)];
-                    RlDat[LmtToNrmlIdx(j + n + 2)] = RlDat[LmtToNrmlIdx(k + n + 2)];
-                    RlDat[LmtToNrmlIdx(k + n + 2)] = t;
+                    t = RlDat[j_l + top + 1];
+                    RlDat[j_l + top + 1] = RlDat[k_l + top + 1];
+                    RlDat[k_l + top + 1] = t;
 
-                    t = ImDat[LmtToNrmlIdx(j + n + 3)];
-                    ImDat[LmtToNrmlIdx(j + n + 3)] = ImDat[LmtToNrmlIdx(k + n + 3)];
-                    ImDat[LmtToNrmlIdx(k + n + 3)] = t;
+                    t = ImDat[j_l + top + 1];
+                    ImDat[j_l + top + 1] = ImDat[k_l + top + 1];
+                    ImDat[k_l + top + 1] = t;
                 }
                 // Knuth R3: advance k                                                                           
                 k += 4;
@@ -570,8 +541,6 @@ Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrml
                 j += h;
             } // bit reverse loop                                                                                
         }
-
-
 
         /// <summary>                                                                                            
         /// Pre-computed sine/cosine tables for speed                                                            

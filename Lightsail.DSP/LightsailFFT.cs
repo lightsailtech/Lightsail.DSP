@@ -2,25 +2,28 @@
  * 
  * Revised: 4/25/2017
  */
+using Lomont;
 using System;
 
 namespace Lightsail.DSP
 {
     public interface ILightsailFFT
     {
-        void FFT(        Complex[] data, bool forward = true);
-        void FFTReal(    Complex[] data, bool forward = true);
-        void FFTTable(   Complex[] data, bool forward = true);
-        void FFT2D(     Complex[,] data, bool forward = true);
-        void FFT2DReal( Complex[,] data, bool forward = true);
+               void FFT(Complex[ ] data, bool forward = true);
+
+          void FFTTable(Complex[ ] data, bool forward = true);
+
+             void FFT2D(Complex[,] data, bool forward = true);
+
         void FFT2DTable(Complex[,] data, bool forward = true);
 
-        void FFT(       double[]  datRl, double[]  datIm, bool forward = true);
-        void FFTReal(   double[]  datRl, double[]  datIm, bool forward = true);
-        void FFTTable(  double[]  datRl, double[]  datIm, bool forward = true);
-        void FFT2D(     double[,] datRl, double[,] datIm, bool forward = true);
-        void FFT2DReal( double[,] datRl, double[,] datIm, bool forward = true);
-        void FFT2DTable(double[,] datRl, double[,] datIm, bool forward = true);
+              void FFT(double[ ] datRl, double[ ] datIm, bool forward = true);
+
+         void FFTTable(double[ ] datRl, double[ ] datIm, bool forward = true);
+
+            void FFT2D(double[,] datRl, double[,] datIm, bool forward = true);
+
+       void FFT2DTable(double[,] datRl, double[,] datIm, bool forward = true);
 
         /// <summary>                                                                                            
         ///     Common (A,B) values are: 
@@ -46,39 +49,43 @@ namespace Lightsail.DSP
     public class LightsailFFT : ILightsailFFT
     {
         public int A { get { return fft.A; } set { fft.A = value; } }
+
         public int B { get { return fft.B; } set { fft.B = value; } }
 
-        Lomont.LomontFFT fft;
+        private LomontFFT fft;
 
         public LightsailFFT()
         {
-            fft = new Lomont.LomontFFT();
+            fft = new LomontFFT();
         } // end constructor
 
-
-        public void FFT(double[] data, bool forward)
+        public void FFT(Complex[] data, bool forward = true)
         {
-            fft.FFT(data, forward);
-        } // end FFT
+            throw new NotImplementedException();
+        }
 
-        public void FFTReal(double[] data, bool forward)
+        public void FFT(double[] datRl, double[] datIm, bool forward = true)
         {
-            fft.RealFFT(data, forward);
-        } // end FFTReal
+            fft.NrmlFFT(datRl, datIm, forward);
+        }
 
-        public void FFTTable(double[] data, bool forward)
+        public void FFTTable(Complex[] data, bool forward = true)
         {
-            fft.TableFFT(data, forward);
+            throw new NotImplementedException();
+        }
+
+        public void FFTTable(double[] datRl, double[] datIm, bool forward = true)
+        {
+            fft.NrmlTableFFT(datRl, datIm, forward);
         } // end FFTTable
 
-        public void FFT2(Complex[,] c, bool forward)
+        #region 2D FFT Methods
+
+        public void FFT2D(Complex[,] data, bool forward = true)
         {
-
-            int idx, jdx;
-            int m;
-
-            int nx = c.GetLength(0), 
-                ny = c.GetLength(1);
+            int idx, jdx,
+                nx = data.GetLength(0),
+                ny = data.GetLength(1);
 
             if (nx == 0 || ny == 0)
                 return;
@@ -90,11 +97,11 @@ namespace Lightsail.DSP
                 im_y = new double[ny];
 
             if ((nx & (nx - 1)) != 0)
-                throw new ArgumentException("x-data length " + nx 
+                throw new ArgumentException("x-data length " + nx
                     + " in FFT2 is not a power of 2");
 
             if ((ny & (ny - 1)) != 0)
-                throw new ArgumentException("y-data length " + ny 
+                throw new ArgumentException("y-data length " + ny
                     + " in FFT2 is not a power of 2");
 
             // Row Transform
@@ -103,16 +110,16 @@ namespace Lightsail.DSP
             {
                 for (idx = 0; idx < nx; idx++)
                 {
-                    rl_x[idx] = c[idx,jdx].RlPart;
-                    im_x[idx] = c[idx,jdx].ImPart;
+                    rl_x[idx] = data[idx, jdx].RlPart;
+                    im_x[idx] = data[idx, jdx].ImPart;
                 }
 
-                fft.FFT(FFTUtil.RlImToLomont(rl_x, im_x), forward: forward);
+                FFT(rl_x, im_x, forward: forward);
 
                 for (idx = 0; idx < nx; idx++)
                 {
-                    c[idx,jdx].RlPart = rl_x[idx];
-                    c[idx,jdx].ImPart = im_x[idx];
+                    data[idx, jdx].RlPart = rl_x[idx];
+                    data[idx, jdx].ImPart = im_x[idx];
                 }
             }
 
@@ -122,88 +129,215 @@ namespace Lightsail.DSP
             {
                 for (jdx = 0; jdx < ny; jdx++)
                 {
-                    rl_y[jdx] = c[idx,jdx].RlPart;
-                    im_y[jdx] = c[idx,jdx].ImPart;
+                    rl_y[jdx] = data[idx, jdx].RlPart;
+                    im_y[jdx] = data[idx, jdx].ImPart;
                 }
 
-                //FFT(dir, m, rl_y, im_y);
+                FFT(rl_y, im_y, forward: forward);
 
                 for (jdx = 0; jdx < ny; jdx++)
                 {
-                    c[idx,jdx].RlPart = rl_y[jdx];
-                    c[idx,jdx].ImPart = im_y[jdx];
+                    data[idx, jdx].RlPart = rl_y[jdx];
+                    data[idx, jdx].ImPart = im_y[jdx];
                 }
             }
-        } // end FFT2
+        } // end FFT2D
 
-        /**
-         * 
-         */
-        public void IFFT2()
+        public void FFT2D(double[,] datRl, double[,] datIm, bool forward = true)
         {
+            int idx, jdx,
+                nx = datRl.GetLength(0),
+                ny = datRl.GetLength(1);
 
-        } // end FFT2
+            if (nx == 0 || ny == 0)
+                return;
 
-        public void FFT(Complex[] data, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            double[]
+                rl_x = new double[nx],
+                im_x = new double[nx],
+                rl_y = new double[ny],
+                im_y = new double[ny];
 
-        public void FFTReal(Complex[] data, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            if (datRl.GetLength(0) != datIm.GetLength(0)
+             || datRl.GetLength(1) != datIm.GetLength(1))
+                throw new ArgumentException("Real and Imaginary component"
+                    + " arrays must be the same size");
+            if ((nx & (nx - 1)) != 0)
+                throw new ArgumentException("x-data length " + nx
+                    + " in FFT2 is not a power of 2");
+            if ((ny & (ny - 1)) != 0)
+                throw new ArgumentException("y-data length " + ny
+                    + " in FFT2 is not a power of 2");
 
-        public void FFTTable(Complex[] data, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            // Row Transform
+            // ================================================================
+            for (jdx = 0; jdx < ny; jdx++)
+            {
+                for (idx = 0; idx < nx; idx++)
+                {
+                    rl_x[idx] = datRl[idx, jdx];
+                    im_x[idx] = datIm[idx, jdx];
+                }
 
-        public void FFT2D(Complex[,] data, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+                FFT(rl_x, im_x, forward: forward);
 
-        public void FFT2DReal(Complex[,] data, bool forward = true)
-        {
-            throw new NotImplementedException();
+                for (idx = 0; idx < nx; idx++)
+                {
+                    datRl[idx, jdx] = rl_x[idx];
+                    datIm[idx, jdx] = im_x[idx];
+                }
+            }
+
+            // Row Transform
+            // ================================================================
+            for (idx = 0; idx < nx; idx++)
+            {
+                for (jdx = 0; jdx < ny; jdx++)
+                {
+                    rl_y[jdx] = datRl[idx, jdx];
+                    im_y[jdx] = datIm[idx, jdx];
+                }
+
+                FFT(rl_y, im_y, forward: forward);
+
+                for (jdx = 0; jdx < ny; jdx++)
+                {
+                    datRl[idx, jdx] = rl_y[jdx];
+                    datIm[idx, jdx] = im_y[jdx];
+                }
+            }
         }
 
         public void FFT2DTable(Complex[,] data, bool forward = true)
         {
-            throw new NotImplementedException();
-        }
+            int idx, jdx,
+                nx = data.GetLength(0),
+                ny = data.GetLength(1);
 
-        public void FFT(double[] datRl, double[] datIm, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            if (nx == 0 || ny == 0)
+                return;
 
-        public void FFTReal(double[] datRl, double[] datIm, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            double[]
+                rl_x = new double[nx],
+                im_x = new double[nx],
+                rl_y = new double[ny],
+                im_y = new double[ny];
 
-        public void FFTTable(double[] datRl, double[] datIm, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            if ((nx & (nx - 1)) != 0)
+                throw new ArgumentException("x-data length " + nx
+                    + " in FFT2 is not a power of 2");
 
-        public void FFT2D(double[,] datRl, double[,] datIm, bool forward = true)
-        {
-            throw new NotImplementedException();
-        }
+            if ((ny & (ny - 1)) != 0)
+                throw new ArgumentException("y-data length " + ny
+                    + " in FFT2 is not a power of 2");
 
-        public void FFT2DReal(double[,] datRl, double[,] datIm, bool forward = true)
-        {
-            throw new NotImplementedException();
+            // Row Transform
+            // ================================================================
+            for (jdx = 0; jdx < ny; jdx++)
+            {
+                for (idx = 0; idx < nx; idx++)
+                {
+                    rl_x[idx] = data[idx, jdx].RlPart;
+                    im_x[idx] = data[idx, jdx].ImPart;
+                }
+
+                FFTTable(rl_x, im_x, forward: forward);
+
+                for (idx = 0; idx < nx; idx++)
+                {
+                    data[idx, jdx].RlPart = rl_x[idx];
+                    data[idx, jdx].ImPart = im_x[idx];
+                }
+            }
+
+            // Row Transform
+            // ================================================================
+            for (idx = 0; idx < nx; idx++)
+            {
+                for (jdx = 0; jdx < ny; jdx++)
+                {
+                    rl_y[jdx] = data[idx, jdx].RlPart;
+                    im_y[jdx] = data[idx, jdx].ImPart;
+                }
+
+                FFTTable(rl_y, im_y, forward: forward);
+
+                for (jdx = 0; jdx < ny; jdx++)
+                {
+                    data[idx, jdx].RlPart = rl_y[jdx];
+                    data[idx, jdx].ImPart = im_y[jdx];
+                }
+            }
         }
 
         public void FFT2DTable(double[,] datRl, double[,] datIm, bool forward = true)
         {
-            throw new NotImplementedException();
+            int idx, jdx,
+                nx = datRl.GetLength(0),
+                ny = datRl.GetLength(1);
+
+            if (nx == 0 || ny == 0)
+                return;
+
+            double[]
+                rl_x = new double[nx],
+                im_x = new double[nx],
+                rl_y = new double[ny],
+                im_y = new double[ny];
+
+            if (datRl.GetLength(0) != datIm.GetLength(0)
+             || datRl.GetLength(1) != datIm.GetLength(1))
+                throw new ArgumentException("Real and Imaginary component"
+                    + " arrays must be the same size");
+            if ((nx & (nx - 1)) != 0)
+                throw new ArgumentException("x-data length " + nx
+                    + " in FFT2 is not a power of 2");
+            if ((ny & (ny - 1)) != 0)
+                throw new ArgumentException("y-data length " + ny
+                    + " in FFT2 is not a power of 2");
+
+            // Row Transform
+            // ================================================================
+            for (jdx = 0; jdx < ny; jdx++)
+            {
+                for (idx = 0; idx < nx; idx++)
+                {
+                    rl_x[idx] = datRl[idx, jdx];
+                    im_x[idx] = datIm[idx, jdx];
+                }
+
+                FFTTable(rl_x, im_x, forward: forward);
+
+                for (idx = 0; idx < nx; idx++)
+                {
+                    datRl[idx, jdx] = rl_x[idx];
+                    datIm[idx, jdx] = im_x[idx];
+                }
+            }
+
+            // Row Transform
+            // ================================================================
+            for (idx = 0; idx < nx; idx++)
+            {
+                for (jdx = 0; jdx < ny; jdx++)
+                {
+                    rl_y[jdx] = datRl[idx, jdx];
+                    im_y[jdx] = datIm[idx, jdx];
+                }
+
+                FFTTable(rl_y, im_y, forward: forward);
+
+                for (jdx = 0; jdx < ny; jdx++)
+                {
+                    datRl[idx, jdx] = rl_y[jdx];
+                    datIm[idx, jdx] = im_y[jdx];
+                }
+            }
         }
-    } // end class FFT
+
+        #endregion
+
+    } // end class LightsailFFT
 }
 
 /*  (C) Copyright Michael Godfrey 2017
