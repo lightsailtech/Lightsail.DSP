@@ -39,7 +39,7 @@
     <Compile Include="Complex.cs" />
     <Compile Include="LightsailFFT.cs" />
     <Compile Include="FFTUtil.cs" />
-    <Compile Include="LMT\LMT_FFT.cs" />
+    <Compile Include="Lomont\LomontFFT.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

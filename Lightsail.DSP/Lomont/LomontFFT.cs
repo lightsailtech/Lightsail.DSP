@@ -16,7 +16,7 @@ namespace Lomont
     /// Properties A and B allow selecting various FFT sign and scaling                                          
     /// conventions.                                                                                             
     /// </summary>                                                                                               
-    public class LomontFFT
+    internal class LomontFFT
     {
         /// <summary>                                                                                            
         /// Compute the forward or inverse Fourier Transform of data, with                                       
