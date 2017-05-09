@@ -16,7 +16,7 @@ namespace Lomont
     /// Properties A and B allow selecting various FFT sign and scaling                                          
     /// conventions.                                                                                             
     /// </summary>                                                                                               
-    internal class LomontFFT
+    public class LomontFFT
     {
         /// <summary>                                                                                            
         /// Compute the forward or inverse Fourier Transform of data, with                                       
@@ -44,18 +44,24 @@ namespace Lomont
             var mmax = 1;
             while (n > mmax)
             {
+
                 var istep = 2 * mmax;
                 var theta = sign * Math.PI / mmax;
                 double wr = 1, wi = 0;
                 var wpr = Math.Cos(theta);
                 var wpi = Math.Sin(theta);
+//Console.WriteLine("    FFT: while (n > mmax) ... (" + n + " > " + mmax + ") ... theta = " + sign / mmax + " pi");
                 for (var m = 0; m < istep; m += 2)
                 {
+//Console.WriteLine("   FFT: for (var m = 0; m < istep; m += 2) ... (var "+m+ " = 0; " + m + " < " + istep + "; " + m + " += 2)");
                     for (var k = m; k < 2 * n; k += 2 * istep)
                     {
+//Console.WriteLine("   FFT: for (var k = m; k < 2 * n; k += 2 * istep) ... (var "+k+ " = "+m+ "; "+k+ " < 2 * "+n+ "; "+k+ " += 2 * "+istep+")");
                         var j = k + istep;
                         var tempr = wr * data[j] - wi * data[j + 1];
                         var tempi = wi * data[j] + wr * data[j + 1];
+Console.WriteLine("    FFT: data[" + j + "] : " + data[j] + " data[j + 1] : " + data[j + 1]);
+//Console.WriteLine("    FFT: tempr : " + tempr + "    tempi : " + tempi);
                         data[j] = data[k] - tempr;
                         data[j + 1] = data[k + 1] - tempi;
                         data[k] = data[k] + tempr;
@@ -70,7 +76,80 @@ namespace Lomont
 
             // perform data scaling as needed                                                                    
             Scale(data, n, forward);
-        } // end FFT
+        }
+
+        public void NrmlFFT(double[] RlDat, double[] ImDat, bool forward)
+        {
+            var n = RlDat.Length;
+            // checks n is a power of 2 in 2's complement format                                                 
+            if ((n & (n - 1)) != 0)
+                throw new ArgumentException(
+                    "data length " + n + " in FFT is not a power of 2");
+            if (RlDat.Length != ImDat.Length)
+                throw new ArgumentException(
+                    "Real data length must match imaginary");
+
+            // n /= 2;    // n is the number of samples                                                             
+
+            //Reverse(dat, n); // bit index data reversal                                                         
+            Reverse(RlDat,ImDat,n);
+
+            // do transform: so single point transforms, then doubles, etc.                                      
+            double sign = forward ? B : -B;
+            var mmax = 1;
+            while (n > mmax)
+            {
+                var istep = 2 * mmax;
+                var theta = sign * Math.PI / mmax;
+                double wr = 1, wi = 0;
+                var wpr = Math.Cos(theta);
+                var wpi = Math.Sin(theta);
+//Console.WriteLine("NrmlFFT: while (n > mmax) ... (" + n + " > " + mmax + ") ... theta = " + sign / mmax + " pi");
+                for (var m = 0; m < istep; m += 2)
+                {
+//Console.WriteLine("NrmlFFT: for (var m = 0; m < istep; m += 2) ... (var "+m+ " = 0; " + m + " < " + istep + "; " + m + " += 2)");
+                    for (var k = m; k < 2 * n; k += 2 * istep)
+                    {
+//Console.WriteLine("NrmlFFT: for (var k = m; k < 2 * n; k += 2 * istep) ... (var " + k + " = " + m + "; " + k + " < 2 * " + n + "; " + k + " += 2 * " + istep + ")");
+                        var j = k + istep;
+                        //var tempr = wr * data[j] - wi * data[j + 1];
+                        var tempr = wr * RlDat[LmtToNrmlIdx(j)] - wi * ImDat[LmtToNrmlIdx(j)];
+                        //var tempi = wi * data[j] + wr * data[j + 1];
+                        var tempi = wi * RlDat[LmtToNrmlIdx(j)] + wr * ImDat[LmtToNrmlIdx(j)];
+Console.WriteLine("NrmlFFT: RlDat[" + LmtToNrmlIdx(j) + "] : " + RlDat[LmtToNrmlIdx(j)]  + " ImDat[" + LmtToNrmlIdx(j) + "] : " + ImDat[LmtToNrmlIdx(j)]);
+//Console.WriteLine("NrmlFFT: tempr : " + tempr + "    tempi : " + tempi);
+                        //data[j] = data[k] - tempr;
+                        RlDat[LmtToNrmlIdx(j)] = RlDat[LmtToNrmlIdx(k)] - tempr;
+
+                        //data[j + 1] = data[k + 1] - tempi;
+                        ImDat[LmtToNrmlIdx(j)] = ImDat[LmtToNrmlIdx(k)] - tempi;
+
+                        //data[k] = data[k] + tempr;
+                        RlDat[LmtToNrmlIdx(k)] = RlDat[LmtToNrmlIdx(k)] + tempr;
+
+                        //data[k + 1] = data[k + 1] + tempi;
+                        ImDat[LmtToNrmlIdx(k)] = ImDat[LmtToNrmlIdx(k)] + tempi;
+                    }
+                    var t = wr; // trig recurrence                                                               
+                    wr = wr * wpr - wi * wpi;
+                    wi = wi * wpr + t * wpi;
+                }
+                mmax = istep;
+            }
+            // perform data scaling as needed                                                                    
+            Scale(RlDat, n, forward);
+            Scale(ImDat, n, forward);
+        }
+
+        static int LmtToNrmlIdx(int idx)
+        {
+            return idx / 2;
+        }
+
+        static int NrmlToLmtIdx(int idx)
+        {
+            return idx * 2;
+        }
 
         /// <summary>                                                                                            
         /// Compute the forward or inverse Fourier Transform of data, with data                                  
@@ -127,6 +206,56 @@ namespace Lomont
 
             // perform data scaling as needed                                                                    
             Scale(data, n, forward);
+        } // end TableFFT
+
+        public void NrmlTableFFT(double[] RlDat, double[] ImDat, bool forward)
+        {
+            var n = RlDat.Length;
+            // checks n is a power of 2 in 2's complement format                                                 
+            if ((n & (n - 1)) != 0)
+                throw new ArgumentException(
+                    "data length " + n + " in FFT is not a power of 2");
+            if (RlDat.Length != ImDat.Length)
+                throw new ArgumentException(
+                    "Real data length must match imaginary");
+
+            // n /= 2;    // n is the number of samples                                                             
+
+            //Reverse(dat, n); // bit index data reversal                                                         
+            Reverse(RlDat, ImDat, n);
+
+            // make table if needed                                                                              
+            if ((cosTable == null) || (cosTable.Length != n))
+                Initialize(n);
+
+            // do transform: so single point transforms, then doubles, etc.                                      
+            double sign = forward ? B : -B;
+            var mmax = 1;
+            var tptr = 0;
+            while (n > mmax)
+            {
+                var istep = 2 * mmax;
+                for (var m = 0; m < istep; m += 2)
+                {
+                    var wr = cosTable[tptr];
+                    var wi = sign * sinTable[tptr++];
+                    for (var k = m; k < 2 * n; k += 2 * istep)
+                    {
+                        var j = k + istep;
+                        var tempr = wr * RlDat[LmtToNrmlIdx(j)] - wi * ImDat[LmtToNrmlIdx(j)];
+                        var tempi = wi * RlDat[LmtToNrmlIdx(j)] + wr * ImDat[LmtToNrmlIdx(j)];
+                        RlDat[LmtToNrmlIdx(j)] = RlDat[LmtToNrmlIdx(k)] - tempr;
+                        ImDat[LmtToNrmlIdx(j)] = ImDat[LmtToNrmlIdx(k)] - tempi;
+                        RlDat[LmtToNrmlIdx(k)] = RlDat[LmtToNrmlIdx(k)] + tempr;
+                        ImDat[LmtToNrmlIdx(k)] = ImDat[LmtToNrmlIdx(k)] + tempi;
+                    }
+                }
+                mmax = istep;
+            }
+            
+            // perform data scaling as needed                                                                    
+            Scale(RlDat, n, forward);
+            Scale(ImDat, n, forward);
         } // end TableFFT
 
         /// <summary>                                                                                            
@@ -341,22 +470,29 @@ namespace Lomont
                 var t = data[j + 2];
                 data[j + 2] = data[k + n];
                 data[k + n] = t;
+
+
                 t = data[j + 3];
                 data[j + 3] = data[k + n + 1];
                 data[k + n + 1] = t;
+
                 if (j > k)
-                { // swap two more                                                                               
+                { // swap two more                                     
+                                                              
                     // j and k                                                                                   
                     t = data[j];
                     data[j] = data[k];
                     data[k] = t;
+
                     t = data[j + 1];
                     data[j + 1] = data[k + 1];
                     data[k + 1] = t;
+                    
                     // j + top + 1 and k+top + 1                                                                 
                     t = data[j + n + 2];
                     data[j + n + 2] = data[k + n + 2];
                     data[k + n + 2] = t;
+
                     t = data[j + n + 3];
                     data[j + n + 3] = data[k + n + 3];
                     data[k + n + 3] = t;
@@ -375,6 +511,67 @@ namespace Lomont
                 j += h;
             } // bit reverse loop                                                                                
         }
+
+
+
+
+        static void Reverse(double[] RlDat, double[] ImDat, int n)
+        {
+            // bit reverse the indices. This is exercise 5 in section                                            
+            // 7.2.1.1 of Knuth's TAOCP the idea is a binary counter                                             
+            // in k and one with bits reversed in j                                                              
+            int j = 0, k = 0; // Knuth R1: initialize                                                            
+            var top = n / 2;  // this is Knuth's 2^(n-1)                                                         
+            while (true)
+            {
+                // Knuth R2: swap - swap j+1 and k+2^(n-1), 2 entries each                                       
+                //var t = data[j + 2];
+                var t = RlDat[LmtToNrmlIdx(j + 2)];
+                RlDat[LmtToNrmlIdx(j + 2)] = RlDat[LmtToNrmlIdx(k + n)];
+                RlDat[LmtToNrmlIdx(k + n)] = t;
+
+
+                t = ImDat[LmtToNrmlIdx(j + 3)];
+                ImDat[LmtToNrmlIdx(j + 3)] = ImDat[LmtToNrmlIdx(k + n + 1)];
+                ImDat[LmtToNrmlIdx(k + n + 1)] = t;
+
+                if (j > k)
+                { // swap two more                                     
+
+                    // j and k                                                                                   
+                    t = RlDat[LmtToNrmlIdx(j)];
+                    RlDat[LmtToNrmlIdx(j)] = RlDat[LmtToNrmlIdx(k)];
+                    RlDat[LmtToNrmlIdx(k)] = t;
+
+                    t = ImDat[LmtToNrmlIdx(j + 1)];
+                    ImDat[LmtToNrmlIdx(j + 1)] = ImDat[LmtToNrmlIdx(k + 1)];
+                    ImDat[LmtToNrmlIdx(k + 1)] = t;
+
+                    // j + top + 1 and k+top + 1                                                                 
+                    t = RlDat[LmtToNrmlIdx(j + n + 2)];
+                    RlDat[LmtToNrmlIdx(j + n + 2)] = RlDat[LmtToNrmlIdx(k + n + 2)];
+                    RlDat[LmtToNrmlIdx(k + n + 2)] = t;
+
+                    t = ImDat[LmtToNrmlIdx(j + n + 3)];
+                    ImDat[LmtToNrmlIdx(j + n + 3)] = ImDat[LmtToNrmlIdx(k + n + 3)];
+                    ImDat[LmtToNrmlIdx(k + n + 3)] = t;
+                }
+                // Knuth R3: advance k                                                                           
+                k += 4;
+                if (k >= n)
+                    break;
+                // Knuth R4: advance j                                                                           
+                var h = top;
+                while (j >= h)
+                {
+                    j -= h;
+                    h /= 2;
+                }
+                j += h;
+            } // bit reverse loop                                                                                
+        }
+
+
 
         /// <summary>                                                                                            
         /// Pre-computed sine/cosine tables for speed                                                            
